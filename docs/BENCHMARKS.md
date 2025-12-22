@@ -43,3 +43,17 @@ LLM operations require WebGPU and model loading.
 *   **Pre-Clean**: Always use rule-based cleaning *before* LLM extraction to reduce token count.
 *   **Chunking**: For documents over 5,000 characters, use the `.chunk()` method and process pieces sequentially or pick relevant sections.
 *   **Model Choice**: Use 1B parameter models for extraction and 3B+ only when high reasoning is required.
+
+## 💰 Token Efficiency (Experimental)
+
+> [!NOTE]
+> This is an experimental observation. Actual savings depend on the complexity of the input text and the target data.
+
+By processing raw text client-side, you can significantly reduce the payload sent to external APIs.
+
+| Input (Raw HTML) | Operation | Output (JSON) | Token Reduction |
+| :--- | :--- | :--- | :--- |
+| **20 KB** (~5,000 tokens) | Extract Contact Info | **200 bytes** (~50 tokens) | **~99%** |
+| **5 KB** (~1,200 tokens) | Summarize / Clean | **500 bytes** (~120 tokens) | **~90%** |
+
+**Concept**: Instead of paying to stream 5,000 tokens of noise to a paid API, you use the local browser model to distill it down to the 50 tokens that matter.

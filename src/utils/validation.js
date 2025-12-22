@@ -8,7 +8,10 @@
  */
 export function validateJSON(text, expectedFields = []) {
   try {
-    const parsed = JSON.parse(text);
+    // Strip markdown code blocks if present (e.g., ```json ... ```)
+    const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+    const cleanText = jsonMatch ? jsonMatch[1] : text;
+    const parsed = JSON.parse(cleanText);
 
     // If fields specified, check they exist
     if (expectedFields.length > 0) {

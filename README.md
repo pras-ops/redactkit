@@ -12,11 +12,23 @@
 ## 🌟 Key Features
 
 - 🕵️ **Privacy-First**: All data stay on the user's local machine. No API keys, no server-side processing.
+- 💰 **Cost Efficient**: Clean and extract data locally to drastically reduce token usage before sending to paid APIs.
 - ⚡ **Hybrid Processing**: High-speed rules for noise removal, LLM for semantic intelligence.
 - 🏗️ **Structured Extraction**: Extract structured data (JSON) directly from messy text.
 - 🧩 **Flexible Chunking**: Intelligent text splitting by length, sentence, or word.
 - 🛡️ **Hardened & Tested**: 60+ tests covering extreme inputs, garbage text, and lifecycle chaos.
 - 🔌 **Easy Integration**: Built-in WebGPU detection and standardized error handling.
+
+---
+---
+### ⚠️ Experimental Project
+
+**This is a proof-of-concept / experiment.**
+While the API is stable enough for testing, the performance and reliability are still evolving. Please do not rely on this for critical production workloads yet.
+
+**Future Ideas (Roadmap):**
+- 🙈 **PII Scrubbing**: Automatically detect and remove personal details (names, phones, emails) client-side before data ever leaves the device.
+- ⚡ **Optimized WebGPU**: Better support for lower-end devices.
 
 ---
 

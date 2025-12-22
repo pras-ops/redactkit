@@ -18,7 +18,7 @@ export class Preprocessor {
 
   /**
    * Load the WebLLM model
-   * @param {string} model - Model name (default: "Llama-3.2-1B-Instruct-q4f16_1")
+   * @param {string} model - Model name (default: "Llama-3.2-1B-Instruct-q4f16_1-MLC")
    * @returns {Promise<void>}
    */
   async loadModel(model) {

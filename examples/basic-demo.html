@@ -78,6 +78,14 @@
             100% { transform: rotate(360deg); }
         }
     </style>
+    <script type="importmap">
+    {
+        "imports": {
+            "@mlc-ai/web-llm": "../node_modules/@mlc-ai/web-llm/lib/index.js",
+            "perf_hooks": "../polyfills/perf_hooks.js"
+        }
+    }
+    </script>
 </head>
 <body>
     <div class="container">
@@ -110,7 +118,7 @@
     </div>
 
     <script type="module">
-        import { Preprocessor } from './src/index.js';
+        import { Preprocessor } from '../dist/index.js';
 
         let preprocessor = null;
 

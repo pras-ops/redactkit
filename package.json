@@ -1,54 +1,67 @@
 {
   "name": "client-llm-preprocessor",
   "version": "0.1.0",
-  "description": "A privacy-first client-side preprocessing SDK with optional LLM support for cleaning and extraction",
+  "description": "Privacy-first client-side LLM preprocessing SDK (rule-based + optional WebGPU LLM)",
   "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
-    ".": "./dist/index.js"
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/USERNAME/local_processing_llm.git"
+    "url": "https://github.com/pras-ops/Local_processing_llm.git"
   },
-  "homepage": "https://github.com/USERNAME/local_processing_llm#readme",
+  "homepage": "https://github.com/pras-ops/Local_processing_llm#readme",
   "bugs": {
-    "url": "https://github.com/USERNAME/local_processing_llm/issues"
+    "url": "https://github.com/pras-ops/Local_processing_llm/issues"
   },
   "scripts": {
     "build": "tsup src/index.js --format esm --dts --out-dir dist",
+    "prepublishOnly": "npm run build",
     "test": "vitest",
     "dev": "npx http-server . -p 8080 -c-1"
   },
   "keywords": [
-    "webllm",
     "llm",
-    "preprocessing",
-    "browser",
-    "client-side",
-    "text-processing",
+    "webgpu",
     "privacy",
+    "browser",
+    "nlp",
+    "preprocessing",
+    "client-side",
+    "webllm",
+    "text-processing",
     "local-ai",
     "text-cleaning",
     "extraction",
-    "webgpu",
     "privacy-first",
     "offline",
     "browser-ai",
-    "data-extraction"
+    "data-extraction",
+    "token-reduction",
+    "cost-saving",
+    "experimental"
   ],
   "author": "Client-Side LLM Preprocessor Contributors",
   "license": "MIT",
   "dependencies": {
-    "@mlc-ai/web-llm": "0.2.6"
+    "@mlc-ai/web-llm": "^0.2.80"
   },
   "devDependencies": {
+    "@esbuild-plugins/node-modules-polyfill": "^0.2.2",
     "tsup": "^8.0.1",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.0",
     "vitest": "^1.1.0"
   }
 }

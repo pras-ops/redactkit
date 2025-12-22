@@ -18,7 +18,7 @@ export class LLMEngine {
    * @param {string} model - Model name (default: "Llama-3.2-1B-Instruct-q4f16_1")
    * @returns {Promise<void>}
    */
-  async loadModel(model = "Llama-3.2-1B-Instruct-q4f16_1") {
+  async loadModel(model = "Llama-3.2-1B-Instruct-q4f16_1-MLC") {
     if (this.engine && this.model === model) {
       this.logger.log('info', 'MODEL', 'Model already loaded, skipping');
       return;
@@ -28,7 +28,7 @@ export class LLMEngine {
     this.logger.log('info', 'MODEL', `Loading model: ${model}`, { model });
 
     try {
-      this.engine = await webllm.CreateWebLLMEngine(model, {
+      this.engine = await webllm.CreateMLCEngine(model, {
         initProgressCallback: (report) => {
           if (report.progress) {
             const progress = (report.progress * 100).toFixed(1);
