@@ -1,5 +1,6 @@
 import * as webllm from "@mlc-ai/web-llm";
 import { getLogger } from "./utils/logger.js";
+import { ModelNotLoadedError, InferenceError } from "./utils/errors.js";
 
 /**
  * WebLLM Engine Wrapper
@@ -48,7 +49,7 @@ export class LLMEngine {
       });
     } catch (error) {
       this.logger.logError('loadModel', error, { model });
-      throw new Error(`Failed to load model: ${error.message}`);
+      throw new InferenceError("Failed to load model", error);
     }
   }
 
@@ -61,7 +62,7 @@ export class LLMEngine {
    */
   async run(prompt, options = {}) {
     if (!this.engine) {
-      throw new Error("Model not loaded. Call loadModel() first.");
+      throw new ModelNotLoadedError("inference");
     }
 
     const {
@@ -138,7 +139,7 @@ export class LLMEngine {
         duration: `${duration}ms`,
         options
       });
-      throw new Error(`Inference failed: ${error.message}`);
+      throw new InferenceError("Failed to run inference", error);
     }
   }
 

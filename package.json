@@ -1,7 +1,7 @@
 {
-  "name": "client-llm-preprocessor",
+  "name": "browser-pii-shield",
   "version": "0.1.0",
-  "description": "Privacy-first client-side LLM preprocessing SDK (rule-based + optional WebGPU LLM)",
+  "description": "Privacy-first client-side PII redaction and restoration SDK for cloud LLMs",
   "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.js",

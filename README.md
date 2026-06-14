@@ -1,90 +1,92 @@
-# Client-Side LLM Preprocessor 🛡️
+# Browser PII Shield 🛡️
 
-[![Build Status](https://github.com/USERNAME/local_processing_llm/actions/workflows/ci.yml/badge.svg)](https://github.com/USERNAME/local_processing_llm/actions)
-[![NPM Version](https://img.shields.io/npm/v/client-llm-preprocessor?color=blue)](https://www.npmjs.com/package/client-llm-preprocessor)
+[![Build Status](https://github.com/pras-ops/Local_processing_llm/actions/workflows/ci.yml/badge.svg)](https://github.com/pras-ops/Local_processing_llm/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-**Client-Side LLM Preprocessor** is a privacy-first JavaScript SDK that enables powerful text preprocessing entirely within the user's browser. It combines high-speed rule-based cleaning with optional high-reasoning LLM-based extraction and semantic cleaning.
+**Browser PII Shield** is a privacy-first local JavaScript SDK that redacts sensitive personal data (PII) client-side in the browser before sending text to external cloud LLM APIs, and restores the original values in responses locally.
+
+By moving redaction and restoration entirely to the client, you ensure that sensitive data **never leaves the user's device**, allowing compliance with strict security requirements (HIPAA, GDPR, SOC2) without sacrificing cloud LLM capabilities.
 
 ---
 
 ## 🌟 Key Features
 
-- 🕵️ **Privacy-First**: All data stay on the user's local machine. No API keys, no server-side processing.
-- 💰 **Cost Efficient**: Clean and extract data locally to drastically reduce token usage before sending to paid APIs.
-- ⚡ **Hybrid Processing**: High-speed rules for noise removal, LLM for semantic intelligence.
-- 🏗️ **Structured Extraction**: Extract structured data (JSON) directly from messy text.
-- 🧩 **Flexible Chunking**: Intelligent text splitting by length, sentence, or word.
-- 🛡️ **Hardened & Tested**: 60+ tests covering extreme inputs, garbage text, and lifecycle chaos.
-- 🔌 **Easy Integration**: Built-in WebGPU detection and standardized error handling.
+- 🕵️ **Privacy-First**: Zero-data-leakage architecture. Data is processed locally in the user's browser memory.
+- ⚡ **Hybrid Detection (Two Tiers)**:
+  - **Tier 1 (Instant, Rules-Based)**: Instant local redaction for common patterns (Emails, Phone numbers, SSNs, Credit Cards with Luhn check, IP addresses, API keys/secrets) with **0 dependencies** and **no model download**.
+  - **Tier 2 (Local LLM-Assisted)**: Local fuzzy entity detection (Names, Addresses, Organizations) using WebGPU and a local 1B WebLLM model.
+- 🔄 **Reversible mapping**: Securely maps original sensitive data to unique placeholders (e.g. `{{EMAIL_1}}`, `{{NAME_1}}`) preserving context and entity identity.
+- 🔌 **Drop-In fetch Proxy**: Wrap your global `fetch` in **one line** to auto-redact outgoing prompts and auto-restore incoming LLM completions.
+- 📉 **Format-Preserving Option**: Retain the structural shape of sensitive tokens (e.g. `cXXXXXt@acme.org` or `+1 (555) 0XX-XXXX`) so the cloud model can still reason correctly.
 
----
----
-### ⚠️ Experimental Project
-
-**This is a proof-of-concept / experiment.**
-While the API is stable enough for testing, the performance and reliability are still evolving. Please do not rely on this for critical production workloads yet.
-
-**Future Ideas (Roadmap):**
-- 🙈 **PII Scrubbing**: Automatically detect and remove personal details (names, phones, emails) client-side before data ever leaves the device.
-- ⚡ **Optimized WebGPU**: Better support for lower-end devices.
-
----
-
-## 📑 Table of Contents
-
-- [Quick Start](#🚀-quick-start)
-- [Installation](#📦-installation)
-- [Core Concepts](#🧩-core-concepts)
-- [API Reference](#📖-api-reference)
-- [Project Structure](#📂-project-structure)
-- [Performance](#📊-performance)
-- [Browser Requirements](#🌐-browser-requirements)
-- [Contributing](#🤝-contributing)
-- [License](#⚖️-license)
+> [!WARNING]
+> **Format-Preserving Data Leakage**: Format-preserving mode leaves structural details like email domains (e.g., `@acme.org`) and initial IP subnets visible to the cloud provider. If domain names or subnets are themselves considered identifying/sensitive for your organization, do not enable `formatPreserving` mode.
 
 ---
 
 ## 🚀 Quick Start
 
-### 1. Verify Environment
-Always check for WebGPU support before attempting to load LLM models:
+### 1. Reversible PII Redaction (Instant Rules, No Download)
 
 ```javascript
-import { Preprocessor } from 'client-llm-preprocessor';
+import { Preprocessor } from 'browser-pii-shield';
 
 const preprocessor = new Preprocessor();
-const isSupported = await preprocessor.checkWebGPU();
 
-if (!isSupported) {
-    console.warn("WebGPU not supported. Falling back to rule-based cleaning only.");
-}
+// 1. Redact locally on device (0 dependencies, instant)
+const rawText = "Hello John, my email is john.doe@acme.org, and card is 4111-1111-1111-1111.";
+const { redacted, map } = await preprocessor.redact(rawText);
+
+console.log(redacted);
+// Output: "Hello John, my email is {{EMAIL_1}}, and card is {{CREDIT_CARD_1}}."
+
+// 2. Transmit `redacted` safely to OpenAI / Claude
+const cloudResponse = "Received data for {{EMAIL_1}} on card {{CREDIT_CARD_1}}.";
+
+// 3. Restore placeholders locally back to original values
+const restored = preprocessor.restore(cloudResponse, map);
+console.log(restored);
+// Output: "Received data for john.doe@acme.org on card 4111-1111-1111-1111."
 ```
 
-### 2. Fast Rule-Based Cleaning (No Model Needed)
-Clean text instantly without any downloads:
+### 2. Drop-In fetch Wrapper (One-Line Integration)
+
+Auto-shield all outgoing API requests to OpenAI, Anthropic, Groq, and others, and automatically restore incoming JSON responses.
 
 ```javascript
-const text = "<html><body>Contact: hello@example.com   -  Visit https://site.com</body></html>";
-const cleaned = preprocessor.chunk(text, {
-    removeHtml: true,
-    removeUrls: true,
-    removeExtraWhitespace: true
+import { Preprocessor, createShieldedFetch } from 'browser-pii-shield';
+
+const preprocessor = new Preprocessor();
+
+// Override global fetch
+globalThis.fetch = createShieldedFetch(preprocessor, {
+  redactOptions: {
+    formatPreserving: true // optional: keep shape
+  }
 });
-// Result: "Contact: hello@example.com -"
+
+// Outgoing prompts are automatically redacted; incoming responses are auto-restored!
+const response = await fetch('https://api.openai.com/v1/chat/completions', {
+  method: 'POST',
+  body: JSON.stringify({
+    messages: [{ role: 'user', content: 'Draft an invoice for john.doe@acme.org' }]
+  })
+});
+const data = await response.json();
+console.log(data.choices[0].message.content); // Contains original email restored!
 ```
 
-### 3. Smart LLM Extraction (Model Required)
-Load a local model to extract structured data:
+### 3. Local LLM-Assisted Redaction (Requires WebGPU)
+
+Load a local model to detect fuzzy entities (names, locations, organisations):
 
 ```javascript
+const preprocessor = new Preprocessor();
 await preprocessor.loadModel('Llama-3.2-1B-Instruct-q4f16_1-MLC');
 
-const resume = "John Doe, Email: john@doe.com, Phone: 123-456-7890...";
-const data = await preprocessor.extract(resume, {
-    format: 'json',
-    fields: ['name', 'email', 'phone']
+const { redacted, map } = await preprocessor.redact(rawText, {
+  llm: { enabled: true }
 });
 ```
 
@@ -93,67 +95,34 @@ const data = await preprocessor.extract(resume, {
 ## 📦 Installation
 
 ```bash
-npm install client-llm-preprocessor
+npm install browser-pii-shield
 ```
 
 ---
 
-## 📂 Project Structure
+## 📊 Performance Benchmarks
 
-The project follows a modular and well-documented structure:
-
-```text
-local_processing_llm/
-├── .github/               # GitHub-specific workflows and templates
-├── docs/                  # In-depth technical guides & architecture
-├── examples/              # Ready-to-run demo pages
-├── src/                   # Source code
-│   ├── preprocess/        # Core logic (clean, chunk, extract)
-│   ├── utils/             # Helpers (logger, validation, errors)
-│   ├── engine.js          # WebLLM wrapper
-│   └── index.js           # Package entry point
-├── tests/                 # 60+ automated tests
-│   ├── unit/              # Pure logic tests
-│   ├── integration/       # Workflow & lifecycle tests
-│   └── helpers/           # Test utilities & mocks
-├── dist/                  # Compiled production build (ESM + Types)
-├── package.json           # Meta-data & dependencies
-└── README.md              # You are here
+Run benchmarks locally on your device:
+```bash
+node scripts/benchmark.js
 ```
 
----
-
-## 📊 Performance
-
-| Input Size | Rule-Based | LLM-Based |
-| :--- | :--- | :--- |
-| **10 KB** | < 1ms | 1-3 seconds |
-| **1 MB** | 12ms | (Requires Chunking) |
-| **10 MB** | 180ms | (Sequential Processing) |
-
-> [!TIP]
-> For a full breakdown of memory usage and speed benchmarks, see [BENCHMARKS.md](docs/BENCHMARKS.md).
+| Input Size | Clean (HTML + URLs) | Chunking (1000 char) | Redact PII (Rules) |
+| :--- | :--- | :--- | :--- |
+| **10 KB** | < 1ms | < 1ms | ~1ms |
+| **1 MB** | ~4ms | < 1ms | ~15ms |
+| **5 MB** | ~25ms | < 1ms | ~67ms |
 
 ---
 
 ## 🌐 Browser Requirements
 
-- **Local Processing**: Any modern browser (Chrome, Firefox, Safari, Edge).
+- **Rule-Based Redaction**: Works in any browser (Chrome, Firefox, Safari, Edge) and Node.js with **0 dependencies**.
 - **LLM Features**: Requires **WebGPU** support.
   - ✅ **Chrome 113+** (Windows, macOS, Linux)
   - ✅ **Edge 113+**
-  - ⚠️ **Safari** (Experimental/Partial)
-  - ❌ **Firefox** (In progress by Mozilla)
-
----
-
-## 📖 Useful Documents
-
-- **[Architecture Overview](docs/ARCHITECTURE.md)**: How the engine works.
-- **[API Documentation](docs/API.md)**: Full method signatures and options.
-- **[Contributing Guide](CONTRIBUTING.md)**: How to help improve the project.
-- **[Security Policy](SECURITY.md)**: Reporting vulnerabilities.
-- **[Troubleshooting](docs/TESTING_GUIDE.md)**: Solutions for common issues.
+  - ✅ **Safari** (Supported)
+  - ✅ **Firefox** (Supported)
 
 ---
 

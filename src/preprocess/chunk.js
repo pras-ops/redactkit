@@ -18,7 +18,8 @@ export function chunk(text, options = {}) {
   const chunks = [];
 
   if (strategy === "character") {
-    for (let i = 0; i < text.length; i += size - overlap) {
+    const step = Math.max(1, size - overlap);
+    for (let i = 0; i < text.length; i += step) {
       chunks.push(text.slice(i, i + size));
     }
   } else if (strategy === "sentence") {

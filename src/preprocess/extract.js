@@ -1,5 +1,4 @@
 import { validateExtraction } from "../utils/validation.js";
-import { getLogger } from "../utils/logger.js";
 
 /**
  * Extract specific information from text

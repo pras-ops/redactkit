@@ -3,79 +3,372 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Client-Side LLM Preprocessor - Test</title>
+    <title>Browser PII Shield - Local Redaction Demo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg-color: #080b11;
+            --card-bg: rgba(17, 24, 39, 0.7);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --accent-gradient: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            --accent-glow: rgba(99, 102, 241, 0.3);
+            --success-color: #10b981;
+            --success-glow: rgba(16, 185, 129, 0.2);
+            --error-color: #ef4444;
+            --panel-bg: rgba(31, 41, 55, 0.5);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 40px 20px;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.1) 0px, transparent 50%);
+            background-attachment: fixed;
+        }
+
+        .container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 20px;
-            background: #f5f5f5;
         }
-        .container {
-            background: white;
+
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .badge {
+            background: rgba(99, 102, 241, 0.15);
+            color: #818cf8;
+            padding: 6px 16px;
+            border-radius: 9999px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            display: inline-block;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            font-weight: 700;
+            background: linear-gradient(to right, #ffffff, #9ca3af);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        /* Glassmorphic Cards */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
             padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            backdrop-filter: blur(16px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            margin-bottom: 30px;
         }
-        h1 { color: #333; }
-        .section {
-            margin: 20px 0;
-            padding: 20px;
-            background: #f9f9f9;
-            border-radius: 5px;
+
+        h2 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 12px;
         }
+
+        .step-num {
+            background: var(--accent-gradient);
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 700;
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Inputs and Textareas */
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
         textarea {
             width: 100%;
-            min-height: 100px;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-family: monospace;
+            min-height: 140px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 16px;
+            color: var(--text-primary);
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            resize: vertical;
         }
+
+        textarea:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        /* Buttons */
+        .btn-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
         button {
-            background: #007bff;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
+            font-family: inherit;
+            font-weight: 500;
+            font-size: 0.95rem;
+            padding: 12px 24px;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 16px;
-            margin: 5px;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
-        button:hover { background: #0056b3; }
+
+        .btn-primary {
+            background: var(--accent-gradient);
+            color: white;
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(79, 70, 229, 0.6);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+            border: 1px solid var(--card-border);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
         button:disabled {
-            background: #ccc;
+            opacity: 0.5;
             cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
         }
-        .output {
-            margin-top: 10px;
-            padding: 15px;
-            background: #e9ecef;
-            border-radius: 5px;
-            white-space: pre-wrap;
-            word-wrap: break-word;
+
+        /* Status & Logs */
+        .status-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--panel-bg);
+            border: 1px solid var(--card-border);
+            padding: 12px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
         }
-        .status {
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 5px;
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
         }
-        .status.info { background: #d1ecf1; color: #0c5460; }
-        .status.success { background: #d4edda; color: #155724; }
-        .status.error { background: #f8d7da; color: #721c24; }
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #007bff;
+
+        .dot {
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
-            animation: spin 1s linear infinite;
+            display: inline-block;
         }
+
+        .dot.active {
+            background: var(--success-color);
+            box-shadow: 0 0 8px var(--success-color);
+        }
+
+        .dot.idle {
+            background: #eab308;
+            box-shadow: 0 0 8px #eab308;
+        }
+
+        .dot.error {
+            background: var(--error-color);
+            box-shadow: 0 0 8px var(--error-color);
+        }
+
+        /* Mapping Visualizer */
+        .map-container {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 16px;
+            max-height: 180px;
+            overflow-y: auto;
+        }
+
+        .map-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            text-align: left;
+        }
+
+        .map-table th {
+            color: var(--text-secondary);
+            font-weight: 500;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .map-table td {
+            padding: 8px 0;
+            font-family: 'Fira Code', monospace;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+        }
+
+        .ph-token {
+            color: #818cf8;
+            font-weight: 500;
+        }
+
+        .orig-val {
+            color: #10b981;
+        }
+
+        /* Step visual flows */
+        .arrow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+            margin: 10px 0;
+        }
+
+        .highlight-container {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            padding: 16px;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--card-border);
+            white-space: pre-wrap;
+            word-break: break-all;
+            min-height: 140px;
+        }
+
+        .highlight-redacted {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            border-bottom: 1px dashed #ef4444;
+            padding: 1px 4px;
+            border-radius: 4px;
+        }
+
+        .highlight-restored {
+            background: rgba(16, 185, 129, 0.2);
+            color: #a7f3d0;
+            border-bottom: 1px dashed #10b981;
+            padding: 1px 4px;
+            border-radius: 4px;
+        }
+
+        .loading-spinner {
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--card-border);
+            color: var(--text-secondary);
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .tab-btn.active {
+            background: rgba(99, 102, 241, 0.15);
+            border-color: rgba(99, 102, 241, 0.5);
+            color: #818cf8;
         }
     </style>
     <script type="importmap">
@@ -89,123 +382,324 @@
 </head>
 <body>
     <div class="container">
-        <h1>🧪 Client-Side LLM Preprocessor - Test</h1>
-        
-        <div class="section">
-            <h2>1. Load Model</h2>
-            <div id="modelStatus" class="status info">Model not loaded</div>
-            <button id="loadModelBtn" onclick="loadModel()">Load Model</button>
+        <header>
+            <div class="badge">Privacy First & Local</div>
+            <h1>Browser PII Shield</h1>
+            <p class="subtitle">Redact sensitive PII data locally in your browser before transmitting it to cloud LLM APIs, and seamlessly restore responses locally.</p>
+        </header>
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div class="status-indicator">
+                <span id="statusDot" class="dot idle"></span>
+                <span id="statusText">Shield Status: Ready (Rule-Based Only)</span>
+            </div>
+            <div id="performanceText" style="color: var(--text-secondary); font-size: 0.85rem;"></div>
         </div>
 
-        <div class="section">
-            <h2>2. Test Input</h2>
-            <textarea id="inputText" placeholder="Enter text to process...">Contact John Doe at john.doe@example.com or call 555-1234. Visit https://example.com for more info.
-
-<html><body>This is some HTML content with <b>formatting</b>.</body></html></textarea>
+        <div class="tabs">
+            <button class="tab-btn active" id="ruleTabBtn" onclick="switchTab('rules')">⚡ Fast Rules (No Model)</button>
+            <button class="tab-btn" id="llmTabBtn" onclick="switchTab('llm')">🧠 LLM-Assisted NER (WebGPU)</button>
         </div>
 
-        <div class="section">
-            <h2>3. Test Operations</h2>
-            <button onclick="testClean()" id="cleanBtn" disabled>Test Clean</button>
-            <button onclick="testExtract()" id="extractBtn" disabled>Test Extract</button>
-            <button onclick="testPipeline()" id="pipelineBtn" disabled>Test Pipeline</button>
+        <!-- Optional WebGPU Loader -->
+        <div id="llmLoaderCard" class="card" style="display: none;">
+            <h2><span class="step-num">0</span>Initialize WebGPU Model</h2>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 20px; line-height: 1.5;">
+                To enable Tier 2 fuzzy entity detection (names, addresses, organizations), you need a local model.
+                This will download a highly compressed ~1.2 GB Llama 3.2 1B model, stored locally in your browser cache.
+            </p>
+            <div id="webgpuProgress" style="display: none; background: rgba(0,0,0,0.4); border-radius: 8px; padding: 12px; margin-bottom: 16px; font-size: 0.85rem;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                    <span>Loading Status</span>
+                    <span id="progressPercent">0%</span>
+                </div>
+                <div style="width:100%; height:6px; background:rgba(255,255,255,0.05); border-radius:3px; overflow:hidden;">
+                    <div id="progressBar" style="width:0%; height:100%; background:var(--accent-gradient);"></div>
+                </div>
+            </div>
+            <button class="btn-primary" id="loadModelBtn" onclick="initializeLocalLLM()">
+                Initialize Llama 3.2 1B (WebGPU)
+            </button>
         </div>
 
-        <div class="section">
-            <h2>4. Output</h2>
-            <div id="output" class="output">Results will appear here...</div>
+        <!-- Core Demo Workflow -->
+        <div class="grid-2">
+            <!-- Left Panel: Input & Redact -->
+            <div class="card">
+                <h2><span class="step-num">1</span>Local Redaction</h2>
+                <div class="input-group" style="margin-bottom: 20px;">
+                    <label for="inputText">Raw Input Text (Contains PII)</label>
+                    <textarea id="inputText">Hello! My name is John Doe. Feel free to email me at john.doe@acme.org or call +1 (555) 019-9999.
+I am a senior consultant at Acme Corp, based at 123 Main St, Boston, MA.
+For payments, please use Visa 4111-1111-1111-1111 (SSN: 999-12-3456, API-Key: sk-5t7y8u9i0o1p2q3w4e5r6t7y8u9i0o1p2q3w4e5r6t7y8u9i).</textarea>
+                </div>
+                
+                <button class="btn-primary" id="redactBtn" onclick="runLocalRedaction()">
+                    🔒 Redact Locally
+                </button>
+
+                <div class="input-group" style="margin-top: 24px;">
+                    <label>Redacted Text (Safe for Cloud LLMs)</label>
+                    <div id="redactedTextHighlight" class="highlight-container">Redaction output will appear here...</div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Placeholders Map -->
+            <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <h2><span class="step-num">2</span>Bidirectional Vault Map</h2>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 16px; line-height: 1.4;">
+                        This map remains exclusively on your device. The keys match the redacted text, while the original values are stored securely in local memory.
+                    </p>
+                    <div class="map-container">
+                        <table class="map-table">
+                            <thead>
+                                <tr>
+                                    <th>Token (Placeholder)</th>
+                                    <th>Original Value</th>
+                                </tr>
+                            </thead>
+                            <tbody id="mapTableBody">
+                                <tr>
+                                    <td colspan="2" style="color: var(--text-secondary); text-align: center; padding-top: 30px;">
+                                        No active mapping. Run redaction first.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Simulated Cloud Execution & Restoration -->
+        <div class="card">
+            <h2><span class="step-num">3</span>Cloud Simulation & Restoration</h2>
+            
+            <div class="grid-2">
+                <div class="input-group">
+                    <label>Simulated Cloud LLM Response (Receives Redacted Input)</label>
+                    <textarea id="cloudResponse" placeholder="Response text with placeholders will be auto-generated..."></textarea>
+                    <div class="btn-container">
+                        <button class="btn-secondary" id="simulateResponseBtn" onclick="generateSimulatedResponse()" disabled>
+                            🤖 Simulate Response
+                        </button>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Local Restored Output (Plaintext Restored Privately)</label>
+                    <div id="restoredTextHighlight" class="highlight-container">Restored output will appear here...</div>
+                    <div class="btn-container">
+                        <button class="btn-primary" id="restoreBtn" onclick="runLocalRestoration()" disabled>
+                            🔓 Restore Locally
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     <script type="module">
         import { Preprocessor } from '../dist/index.js';
 
-        let preprocessor = null;
+        let preprocessor = new Preprocessor({
+            loggerOptions: { enabled: true, verbose: true }
+        });
 
-        window.loadModel = async function() {
+        let activeTab = 'rules';
+        let currentMap = null;
+        let isModelLoaded = false;
+
+        window.switchTab = function(tab) {
+            activeTab = tab;
+            document.getElementById('ruleTabBtn').classList.toggle('active', tab === 'rules');
+            document.getElementById('llmTabBtn').classList.toggle('active', tab === 'llm');
+            document.getElementById('llmLoaderCard').style.display = tab === 'llm' ? 'block' : 'none';
+
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+
+            if (tab === 'rules') {
+                statusDot.className = 'dot active';
+                statusText.textContent = 'Shield Status: Ready (Rule-Based Only)';
+            } else {
+                if (isModelLoaded) {
+                    statusDot.className = 'dot active';
+                    statusText.textContent = 'Shield Status: Ready (Rules + Local LLM)';
+                } else {
+                    statusDot.className = 'dot idle';
+                    statusText.textContent = 'Shield Status: Model Needed (WebGPU)';
+                }
+            }
+        };
+
+        // Initialize active tab details
+        switchTab('rules');
+
+        window.initializeLocalLLM = async function() {
             const btn = document.getElementById('loadModelBtn');
-            const status = document.getElementById('modelStatus');
-            
+            const progressContainer = document.getElementById('webgpuProgress');
+            const progressBar = document.getElementById('progressBar');
+            const progressPercent = document.getElementById('progressPercent');
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+
             btn.disabled = true;
-            status.className = 'status info';
-            status.innerHTML = '<span class="loading"></span> Loading model... (This may take 1-2 minutes)';
-            
+            progressContainer.style.display = 'block';
+            statusDot.className = 'dot idle';
+            statusText.textContent = 'Shield Status: Downloading local model...';
+
             try {
-                preprocessor = new Preprocessor({
-                    loggerOptions: { enabled: true, verbose: true }
-                });
+                // Intercept logger messages to show progress
+                const logger = preprocessor.getLogger();
+                const originalLog = logger.log;
+                logger.log = function(level, category, message, details) {
+                    originalLog.apply(logger, arguments);
+                    if (category === 'MODEL' && details && details.progress) {
+                        const prog = Math.round(details.progress * 100);
+                        progressBar.style.width = `${prog}%`;
+                        progressPercent.textContent = `${prog}%`;
+                    }
+                };
 
                 await preprocessor.loadModel();
                 
-                status.className = 'status success';
-                status.textContent = '✅ Model loaded successfully!';
-                
-                document.getElementById('cleanBtn').disabled = false;
-                document.getElementById('extractBtn').disabled = false;
-                document.getElementById('pipelineBtn').disabled = false;
-                
+                isModelLoaded = true;
+                statusDot.className = 'dot active';
+                statusText.textContent = 'Shield Status: Ready (Rules + Local LLM)';
+                btn.textContent = '✅ Model Loaded';
+                progressContainer.style.display = 'none';
             } catch (error) {
-                status.className = 'status error';
-                status.textContent = `❌ Error: ${error.message}`;
+                statusDot.className = 'dot error';
+                statusText.textContent = `Shield Status: Failed to load model (${error.message})`;
+                btn.disabled = false;
+                console.error(error);
+            }
+        };
+
+        window.runLocalRedaction = async function() {
+            const inputText = document.getElementById('inputText').value;
+            const highlightContainer = document.getElementById('redactedTextHighlight');
+            const tableBody = document.getElementById('mapTableBody');
+            const perfText = document.getElementById('performanceText');
+            const redactBtn = document.getElementById('redactBtn');
+
+            redactBtn.disabled = true;
+            highlightContainer.textContent = 'Redacting...';
+            const t0 = performance.now();
+
+            try {
+                let redactResult;
+                if (activeTab === 'llm' && isModelLoaded) {
+                    redactResult = await preprocessor.redact(inputText, {
+                        llm: { enabled: true }
+                    });
+                } else {
+                    redactResult = await preprocessor.redact(inputText, {
+                        llm: { enabled: false }
+                    });
+                }
+
+                const { redacted, map } = redactResult;
+                currentMap = map;
+                const duration = Math.round(performance.now() - t0);
+                perfText.textContent = `Execution time: ${duration}ms`;
+
+                // Display redacted text with highlighted tokens
+                let displayHTML = redacted;
+                const placeholders = Object.keys(map).sort((a, b) => b.length - a.length);
+                for (const placeholder of placeholders) {
+                    const cleanPh = placeholder.replace(/[{}]/g, "");
+                    const regex = new RegExp(placeholder, 'g');
+                    displayHTML = displayHTML.replaceAll(placeholder, `<span class="highlight-redacted">${placeholder}</span>`);
+                }
+                highlightContainer.innerHTML = displayHTML;
+
+                // Build mapping table
+                tableBody.innerHTML = '';
+                if (Object.keys(map).length === 0) {
+                    tableBody.innerHTML = `<tr><td colspan="2" style="color: var(--text-secondary); text-align: center; padding-top: 30px;">No PII detected.</td></tr>`;
+                } else {
+                    for (const [key, val] of Object.entries(map)) {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `<td class="ph-token">${key}</td><td class="orig-val">${escapeHtml(val)}</td>`;
+                        tableBody.appendChild(tr);
+                    }
+                }
+
+                // Enable subsequent steps
+                document.getElementById('simulateResponseBtn').disabled = false;
+                document.getElementById('restoreBtn').disabled = true;
+                document.getElementById('restoredTextHighlight').innerHTML = 'Restored output will appear here...';
+            } catch (error) {
+                highlightContainer.textContent = `Error: ${error.message}`;
                 console.error(error);
             } finally {
-                btn.disabled = false;
+                redactBtn.disabled = false;
             }
         };
 
-        window.testClean = async function() {
-            const input = document.getElementById('inputText').value;
-            const output = document.getElementById('output');
-            output.textContent = 'Cleaning...';
+        window.generateSimulatedResponse = function() {
+            const cloudResponseText = document.getElementById('cloudResponse');
             
+            // Check if names/organizations are in map (otherwise use defaults)
+            const mapKeys = Object.keys(currentMap);
+            
+            let nameToken = mapKeys.find(k => k.includes('NAME')) || '{{NAME_1}}';
+            let emailToken = mapKeys.find(k => k.includes('EMAIL')) || '{{EMAIL_1}}';
+            let orgToken = mapKeys.find(k => k.includes('ORGANIZATION')) || '{{ORGANIZATION_1}}';
+            let phoneToken = mapKeys.find(k => k.includes('PHONE')) || '{{PHONE_1}}';
+
+            // Generate template response simulating a cloud LLM
+            cloudResponseText.value = `Subject: Welcome onboard!
+
+Dear ${nameToken},
+
+Thank you for contacting us. We have received your email at ${emailToken} and registered your contact number (${phoneToken}).
+We look forward to working with your team at ${orgToken} to schedule our first workshop.
+
+Best regards,
+Cloud Assistant`;
+
+            document.getElementById('restoreBtn').disabled = false;
+        };
+
+        window.runLocalRestoration = function() {
+            const cloudResponse = document.getElementById('cloudResponse').value;
+            const highlightContainer = document.getElementById('restoredTextHighlight');
+
+            if (!currentMap) return;
+
             try {
-                const result = await preprocessor.clean(input, {
-                    removeHtml: true,
-                    removeUrls: false,
-                    removeExtraWhitespace: true
-                });
-                output.textContent = `✅ Cleaned Text:\n\n${result}`;
+                const restored = preprocessor.restore(cloudResponse, currentMap);
+
+                // Highlight restored values
+                let displayHTML = restored;
+                // Sort by original value length descending
+                const mappings = Object.entries(currentMap).sort((a, b) => b[1].length - a[1].length);
+                for (const [placeholder, val] of mappings) {
+                    displayHTML = displayHTML.replaceAll(val, `<span class="highlight-restored">${escapeHtml(val)}</span>`);
+                }
+
+                highlightContainer.innerHTML = displayHTML;
             } catch (error) {
-                output.textContent = `❌ Error: ${error.message}`;
+                highlightContainer.textContent = `Error: ${error.message}`;
                 console.error(error);
             }
         };
 
-        window.testExtract = async function() {
-            const input = document.getElementById('inputText').value;
-            const output = document.getElementById('output');
-            output.textContent = 'Extracting...';
-            
-            try {
-                const result = await preprocessor.extract(input, {
-                    what: "contact information",
-                    format: "json",
-                    fields: ["name", "email", "phone", "url"],
-                    validate: true
-                });
-                output.textContent = `✅ Extracted Data:\n\n${result}`;
-            } catch (error) {
-                output.textContent = `❌ Error: ${error.message}`;
-                console.error(error);
-            }
-        };
-
-        window.testPipeline = async function() {
-            const input = document.getElementById('inputText').value;
-            const output = document.getElementById('output');
-            output.textContent = 'Running pipeline...';
-            
-            try {
-                const result = await preprocessor.pipeline(input, [
-                    "clean",
-                    { extract: { format: "json", fields: ["name", "email", "phone"] } }
-                ]);
-                output.textContent = `✅ Pipeline Result:\n\n${result}`;
-            } catch (error) {
-                output.textContent = `❌ Error: ${error.message}`;
-                console.error(error);
-            }
-        };
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
     </script>
 </body>
 </html>

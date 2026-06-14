@@ -1,21 +1,21 @@
-# 📊 Performance Benchmarks (Reference)
+# 📊 Performance Benchmarks
 
-This document provides a performance baseline for the Client-Side LLM Preprocessor running on modern hardware.
+This document provides a performance baseline for the Browser PII Shield running on modern hardware.
 
-> [!NOTE]
-> These numbers are benchmarks recorded on a Mid-Range Development Laptop (16GB RAM, RTX 3060).
-> Actual performance will vary significantly based on user hardware and model choice.
+You can reproduce these benchmarks locally using:
+```bash
+node scripts/benchmark.js
+```
 
 ## ⚡ Rule-Based Processing (Non-LLM)
 
-Rule-based cleaning and chunking are extremely fast and work on any hardware.
+Rule-based cleaning, chunking, and PII redaction are extremely fast and work on any hardware.
 
-| Input Size | Operation | Time (Avg) |
-| :--- | :--- | :--- |
-| 10 KB | Clean (HTML + URLs) | < 1ms |
-| 1 MB | Clean (HTML + URLs) | 12ms |
-| 5 MB | Chunking (1000 char) | 45ms |
-| 10 MB | Multi-step Pipeline | 180ms |
+| Input Size | Clean (HTML + URLs) | Chunking (1000 char) | Redact PII (Rules) |
+| :--- | :--- | :--- | :--- |
+| **10 KB** | < 1ms | < 1ms | ~1ms |
+| **1 MB** | ~4ms | < 1ms | ~15ms |
+| **5 MB** | ~25ms | < 1ms | ~67ms |
 
 ## 🧠 LLM-Based Processing
 

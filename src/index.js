@@ -2,6 +2,9 @@ import { LLMEngine } from "./engine.js";
 import { clean } from "./preprocess/clean.js";
 import { chunk } from "./preprocess/chunk.js";
 import { extract } from "./preprocess/extract.js";
+import { redact, restore } from "./preprocess/redact.js";
+import { createShieldedFetch } from "./utils/fetch.js";
+import { ModelNotLoadedError } from "./utils/errors.js";
 
 /**
  * Client-Side LLM Preprocessor
@@ -66,9 +69,7 @@ export class Preprocessor {
    */
   _ensureLoaded() {
     if (!this.isModelLoaded && !this.engine.isLoaded()) {
-      throw new Error(
-        "Model not loaded. Call loadModel() first before using preprocessing functions."
-      );
+      throw new ModelNotLoadedError("preprocessing functions");
     }
   }
 
@@ -130,6 +131,39 @@ export class Preprocessor {
   chunk(text, options = {}) {
     // No model check needed - chunk is pure string operation
     return chunk(text, options);
+  }
+
+  /**
+   * Redact sensitive PII data locally
+   * Works with or without LLM model loaded
+   * @param {string} text - Input text to redact
+   * @param {Object} options - Redaction configurations
+   * @returns {Promise<{redacted: string, map: Object}>}
+   */
+  async redact(text, options = {}) {
+    if (options?.llm?.enabled === true) {
+      this._ensureLoaded();
+    }
+    return await redact(this.engine, text, options);
+  }
+
+  /**
+   * Restore redacted placeholders in a response with their original values
+   * @param {string} text - Response text containing placeholders
+   * @param {Object} map - Bidirectional map returned from redact()
+   * @returns {string}
+   */
+  restore(text, map) {
+    return restore(text, map);
+  }
+
+  /**
+   * Create a shielded fetch wrapper
+   * @param {Object} options - Wrapper configurations
+   * @returns {Function}
+   */
+  createShieldedFetch(options = {}) {
+    return createShieldedFetch(this, options);
   }
 
   /**
@@ -355,4 +389,6 @@ export { clean } from "./preprocess/clean.js";
 export { cleanWithRules } from "./preprocess/clean-rules.js";
 export { chunk } from "./preprocess/chunk.js";
 export { extract } from "./preprocess/extract.js";
+export { redact, restore } from "./preprocess/redact.js";
+export { createShieldedFetch } from "./utils/fetch.js";
 

@@ -22,6 +22,9 @@ describe('API Surface & Export Integrity', () => {
         expect(typeof p.clean).toBe('function');
         expect(typeof p.extract).toBe('function');
         expect(typeof p.chunk).toBe('function');
+        expect(typeof p.redact).toBe('function');
+        expect(typeof p.restore).toBe('function');
+        expect(typeof p.createShieldedFetch).toBe('function');
         expect(typeof p.pipeline).toBe('function');
     });
 
@@ -31,13 +34,16 @@ describe('API Surface & Export Integrity', () => {
         expect(EntryPoint.chunk).toBeDefined();
         expect(EntryPoint.extract).toBeDefined();
         expect(EntryPoint.cleanWithRules).toBeDefined();
+        expect(EntryPoint.redact).toBeDefined();
+        expect(EntryPoint.restore).toBeDefined();
+        expect(EntryPoint.createShieldedFetch).toBeDefined();
     });
 
     it('should have a stable public API signature', () => {
         const p = new EntryPoint.Preprocessor();
         // Check method names explicitly
         const methods = Object.getOwnPropertyNames(EntryPoint.Preprocessor.prototype);
-        const expected = ['constructor', 'loadModel', 'getLogger', 'setLogging', 'clean', 'extract', 'chunk', 'prompt', 'pipeline', 'process'];
+        const expected = ['constructor', 'loadModel', 'getLogger', 'setLogging', 'clean', 'extract', 'chunk', 'redact', 'restore', 'createShieldedFetch', 'prompt', 'pipeline', 'process'];
 
         expected.forEach(m => expect(methods).toContain(m));
     });

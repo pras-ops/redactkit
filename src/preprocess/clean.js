@@ -1,4 +1,3 @@
-import { getLogger } from "../utils/logger.js";
 import { cleanWithRules } from "./clean-rules.js";
 
 /**

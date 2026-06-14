@@ -40,4 +40,10 @@ describe('chunk', () => {
         expect(result).toHaveLength(1);
         expect(result[0]).toBe(shortText);
     });
+
+    it('should handle overlap >= size without infinite looping', () => {
+        const result = chunk(sampleText, { size: 10, overlap: 10, strategy: 'character' });
+        expect(Array.isArray(result)).toBe(true);
+        expect(result.length).toBeGreaterThan(0);
+    });
 });
