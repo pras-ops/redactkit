@@ -20,6 +20,7 @@ Use it as a **browser SDK**, a **local proxy/CLI** that shields any app, or a **
 
 - [Why](#why)
 - [How it works](#how-it-works)
+- [Demo](#demo)
 - [Features](#features)
 - [Installation](#installation)
 - [Quick start](#quick-start)
@@ -69,6 +70,33 @@ flowchart LR
 ```
 
 The provider only sees placeholders and blurred images. The placeholder → value map stays in a local, TTL-bound store and is used only to restore the reply on your machine. **Text redaction is reversible; image blur is one-way by design.**
+
+---
+
+## Demo
+
+Here is a recording of RedactKit in action, demonstrating the local redaction, simulated cloud LLM response, and automatic local restoration:
+
+![RedactKit Demo](docs/demo.webp)
+
+For a step-by-step visual breakdown, see below:
+
+<details>
+<summary>📸 Step-by-Step Screenshots</summary>
+
+### 1. Ready state (Local Demo Page)
+The user enters a prompt containing sensitive PII (name, email, credit card, etc.).
+![Landing State](docs/screenshots/01-landing.png)
+
+### 2. Local Redaction
+RedactKit scans and redacts the PII locally on the machine, replacing it with secure, stable placeholders.
+![Redacted State](docs/screenshots/02-redacted.png)
+
+### 3. Response & Local Restoration
+The cloud LLM processes the redacted prompt and returns a response containing the placeholders. RedactKit intercepts the response and restores the original PII locally.
+![Restored State](docs/screenshots/03-restored.png)
+
+</details>
 
 ---
 
