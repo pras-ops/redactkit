@@ -5,7 +5,7 @@
 **A local privacy layer for cloud LLMs** — redact sensitive data before it leaves your machine, restore it in the reply, and optionally compress prompts and blur sensitive data in images. **100% on-device.**
 
 [![CI](https://github.com/pras-ops/redactkit/actions/workflows/ci.yml/badge.svg)](https://github.com/pras-ops/redactkit/actions)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%E2%89%A518-339933.svg)](package.json)
 [![Status](https://img.shields.io/badge/status-experimental-orange.svg)](ROADMAP.md)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
@@ -361,4 +361,4 @@ Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) and th
 
 ## License
 
-[MIT](LICENSE) © RedactKit contributors.
+[Apache-2.0](LICENSE) © RedactKit contributors.
